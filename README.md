@@ -31,9 +31,9 @@ This system improves **efficiency, transparency, and communication** across all 
 ---
 
 ## 🛠️ Tech Stack  
-- **Frontend:** React.js / HTML / CSS / JavaScript  
-- **Backend:** Node.js / Express.js (or Flask/Django if using Python)  
-- **Database:** MySQL / MongoDB  
+- **Frontend:** React.js 
+- **Backend:** Flask/Django 
+- **Database:** MongoDB  
 - **Notifications:** Twilio API / SMTP for SMS & email alerts  
 - **Design & Prototyping:** [Figma](https://www.figma.com/make/OTM8p5BP2OCCXj99scpXkt/Health-Insurance-Claim-Login?node-id=0-1&p=f&t=in9AlxCc6VGRCDhj-0&fullscreen=1)  
 
