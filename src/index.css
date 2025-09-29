@@ -1,28 +1,16 @@
-body {/*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
-
-  margin: 0;@layer properties {
-
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',  @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
-
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',    *, :before, :after, ::backdrop {
-
-    sans-serif;      --tw-translate-x: 0;
-
-  -webkit-font-smoothing: antialiased;      --tw-translate-y: 0;
-
-  -moz-osx-font-smoothing: grayscale;      --tw-translate-z: 0;
-
-}      --tw-rotate-x: rotateX(0);
-
+/*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
+@layer properties {
+  @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
+    *, :before, :after, ::backdrop {
+      --tw-translate-x: 0;
+      --tw-translate-y: 0;
+      --tw-translate-z: 0;
+      --tw-rotate-x: rotateX(0);
       --tw-rotate-y: rotateY(0);
-
-code {      --tw-rotate-z: rotateZ(0);
-
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',      --tw-skew-x: skewX(0);
-
-    monospace;      --tw-skew-y: skewY(0);
-
-}      --tw-space-y-reverse: 0;
+      --tw-rotate-z: rotateZ(0);
+      --tw-skew-x: skewX(0);
+      --tw-skew-y: skewY(0);
+      --tw-space-y-reverse: 0;
       --tw-space-x-reverse: 0;
       --tw-border-style: solid;
       --tw-gradient-position: initial;
