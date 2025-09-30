@@ -16,6 +16,7 @@ export default function Header({ user, onLogout }) {
     }
   };
 
+  
   const getTitle = () => {
     switch (user.type) {
       case 'patient':
