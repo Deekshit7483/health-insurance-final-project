@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea';
 import { Separator } from '../ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { 
   CheckCircle, 
   XCircle, 
@@ -21,171 +20,111 @@ import {
   Shield,
   Users,
   DollarSign,
-  FileText,
-  Loader2,
-  LogOut,
-  Building2
+  FileText
 } from 'lucide-react';
-import payorAPI from '../../services/payorAPI';
-import PolicyManagement from '../policies/PolicyManagement';
-import PreAuthorizationCenter from '../preauth/PreAuthorizationCenter';
 
-function PayorDashboard({ payor, onLogout }) {
+function PayorDashboard() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClaim, setSelectedClaim] = useState(null);
-  const [claims, setClaims] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [actionLoading, setActionLoading] = useState({});
 
-  // Debug logging
-  console.log('PayorDashboard rendered with payor:', payor);
-
-  // Early return for testing - remove this after debugging
-  if (!payor) {
-    return (
-      <div className="p-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Payor Dashboard</h2>
-          <p className="text-gray-600">No payor data available</p>
-          <Button onClick={onLogout} className="mt-4">
-            Return to Login
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state with retry option
-  if (error && error.includes('authentication')) {
-    return (
-      <div className="p-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
-          <p className="text-red-600 mb-4">{error}</p>
-          <div className="space-x-4">
-            <Button onClick={() => { setError(null); fetchData(); }}>
-              Retry
-            </Button>
-            <Button onClick={onLogout} variant="outline">
-              Log Out
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fetch data on component mount and when authentication state changes
-  useEffect(() => {
-    console.log('PayorDashboard useEffect triggered');
-    console.log('PayorAPI auth state:', payorAPI.getAuthState());
-    
-    // Check if we have authentication before fetching data
-    if (!payorAPI.isAuthenticated()) {
-      console.warn('No authentication headers found, user may need to log in again');
-      setError('Authentication expired. Please log in again.');
-      return;
-    }
-    
-    fetchData();
-  }, [payor?.payor_id]); // Re-fetch when payor changes
-
-  const fetchData = async () => {
-    try {
-      console.log('Fetching dashboard data...');
-      console.log('Current auth state:', payorAPI.getAuthState());
-      setLoading(true);
-      setError(null);
-      
-      // Check authentication before each request
-      if (!payorAPI.isAuthenticated()) {
-        throw new Error('Not authenticated - please log in again');
-      }
-      
-      // Simplified data fetching - load basic data first
-      console.log('Getting claims...');
-      const claimsData = await payorAPI.getClaims(1, 20).catch((err) => {
-        console.warn('Failed to load claims:', err);
-        if (err.message.includes('401') || err.message.includes('authentication')) {
-          throw new Error('Authentication failed - please log in again');
-        }
-        return { results: [] };
-      });
-      
-      console.log('Getting analytics...');
-      const analyticsData = await payorAPI.getAnalytics().catch((err) => {
-        console.warn('Failed to load analytics:', err);
-        return null;
-      });
-      
-      console.log('Getting summary...');
-      const summaryData = await payorAPI.getClaimsSummary().catch((err) => {
-        console.warn('Failed to load summary:', err);
-        return null;
-      });
-      
-      setClaims(claimsData.results || []);
-      setAnalytics(analyticsData);
-      setSummary(summaryData);
-      console.log('Dashboard data loaded successfully');
-    } catch (err) {
-      const errorMessage = err.message.includes('authentication') || err.message.includes('401')
-        ? 'Authentication expired. Please log in again.'
-        : 'Failed to load dashboard data. Please try again.';
-      setError(errorMessage);
-      console.error('Dashboard data fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
+  // Mock data
+  const analytics = {
+    avgProcessingTime: '2.3 days',
+    approvalRatio: 87,
+    totalClaimsToday: 45,
+    pendingReview: 23,
+    totalProcessed: 1247,
+    totalAmount: '$2,845,320'
   };
 
-  // Handle claim actions
-  const handleClaimAction = async (claimId, action, data = {}) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [claimId]: action }));
-      
-      let status;
-      switch (action) {
-        case 'approve':
-          status = 'approved';
-          break;
-        case 'deny':
-          status = 'denied';
-          break;
-        case 'request-info':
-          status = 'processing';
-          break;
-        default:
-          status = action;
+  const claimsQueue = [
+    {
+      id: 'CLM-2024-001',
+      patient: {
+        name: 'John Doe',
+        id: 'P-12345',
+        age: 45,
+        policyNumber: 'BC-789-456'
+      },
+      provider: {
+        name: 'City General Hospital',
+        id: 'H-5678',
+        network: 'In-Network'
+      },
+      claim: {
+        diagnosis: 'Acute Bronchitis',
+        amount: '$1,250',
+        submittedDate: '2024-01-15',
+        priority: 'medium',
+        urgency: 'Standard'
+      },
+      coverage: {
+        status: 'Active',
+        type: 'Preferred PPO',
+        preAuth: 'Not Required'
       }
-      
-      await payorAPI.updateClaimStatus(
-        claimId, 
-        status, 
-        data.notes || `Claim ${action}d by payor`,
-        data.approvedAmount
-      );
-      
-      // Refresh claims data
-      await fetchData();
-    } catch (err) {
-      setError(`Failed to ${action} claim. Please try again.`);
-      console.error(`Claim ${action} error:`, err);
-    } finally {
-      setActionLoading(prev => ({ ...prev, [claimId]: null }));
+    },
+    {
+      id: 'CLM-2024-002',
+      patient: {
+        name: 'Jane Smith',
+        id: 'P-12346',
+        age: 32,
+        policyNumber: 'BC-456-789'
+      },
+      provider: {
+        name: 'Downtown Clinic',
+        id: 'C-2345',
+        network: 'In-Network'
+      },
+      claim: {
+        diagnosis: 'Annual Physical',
+        amount: '$350',
+        submittedDate: '2024-01-14',
+        priority: 'low',
+        urgency: 'Routine'
+      },
+      coverage: {
+        status: 'Active',
+        type: 'Standard PPO',
+        preAuth: 'Not Required'
+      }
+    },
+    {
+      id: 'CLM-2024-003',
+      patient: {
+        name: 'Mike Johnson',
+        id: 'P-12347',
+        age: 58,
+        policyNumber: 'BC-321-654'
+      },
+      provider: {
+        name: 'Cardiac Specialists',
+        id: 'S-7890',
+        network: 'Out-of-Network'
+      },
+      claim: {
+        diagnosis: 'Cardiac Evaluation',
+        amount: '$2,800',
+        submittedDate: '2024-01-13',
+        priority: 'high',
+        urgency: 'Expedited'
+      },
+      coverage: {
+        status: 'Active',
+        type: 'Premium PPO',
+        preAuth: 'Required'
+      }
     }
-  };
+  ];
 
-  const filteredClaims = claims.filter(claim => {
-    const matchesPriority = priorityFilter === 'all' || claim.priority === priorityFilter;
+  const filteredClaims = claimsQueue.filter(claim => {
+    const matchesPriority = priorityFilter === 'all' || claim.claim.priority === priorityFilter;
     const matchesSearch = searchTerm === '' || 
-      claim.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.claim_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      claim.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      claim.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      claim.provider.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesPriority && matchesSearch;
   });
 
@@ -203,139 +142,78 @@ function PayorDashboard({ payor, onLogout }) {
   };
 
   const getNetworkColor = (network) => {
-    if (!network) return 'text-gray-600';
-    return network.toLowerCase().includes('in-network') || network.toLowerCase().includes('in network') 
-      ? 'text-green-600' 
-      : 'text-orange-600';
+    return network === 'In-Network' ? 'text-green-600' : 'text-orange-600';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg">
-                <Building2 className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{payor.name}</h1>
-                <p className="text-gray-600">HIPAA-Compliant Payor Portal • {payor.payor_id}</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={onLogout} className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-gradient-to-br from-[#4ea8de] to-purple-500 rounded-2xl shadow-lg">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl text-gray-900 mb-2">Payor Dashboard</h1>
+            <p className="text-[#6b7280]">Review and process insurance claims efficiently</p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto p-6">
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="policies">Insurance Policies</TabsTrigger>
-            <TabsTrigger value="preauth">Pre-Authorization</TabsTrigger>
-            <TabsTrigger value="claims">Claims Management</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="space-y-6">
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#4ea8de]" />
-          <span className="ml-2 text-gray-600">Loading dashboard data...</span>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-            <span className="text-red-800">{error}</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={fetchData}
-              className="ml-auto text-red-600 border-red-200 hover:bg-red-100"
-            >
-              Retry
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Analytics Cards: Average Processing Time, Approval Ratio */}
-      {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 mb-1">Average Processing Time</p>
-                  <p className="text-3xl text-blue-900 font-medium">
-                    {analytics?.avg_processing_time_days ? `${analytics.avg_processing_time_days} days` : 'N/A'}
-                  </p>
-                  <p className="text-xs text-blue-700 mt-1">Calculated from recent claims</p>
-                </div>
-                <Clock className="h-10 w-10 text-blue-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-600 mb-1">Average Processing Time</p>
+                <p className="text-3xl text-blue-900 font-medium">{analytics.avgProcessingTime}</p>
+                <p className="text-xs text-blue-700 mt-1">-0.5 days from last month</p>
               </div>
-            </CardContent>
-          </Card>
+              <Clock className="h-10 w-10 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 mb-1">Approval Ratio</p>
-                  <p className="text-3xl text-green-900 font-medium">
-                    {analytics?.approval_ratio ? `${analytics.approval_ratio}%` : 'N/A'}
-                  </p>
-                  <p className="text-xs text-green-700 mt-1">Current approval rate</p>
-                </div>
-                <TrendingUp className="h-10 w-10 text-green-600" />
+        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-600 mb-1">Approval Ratio</p>
+                <p className="text-3xl text-green-900 font-medium">{analytics.approvalRatio}%</p>
+                <p className="text-xs text-green-700 mt-1">+2% from last month</p>
               </div>
-            </CardContent>
-          </Card>
+              <TrendingUp className="h-10 w-10 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 mb-1">Claims Today</p>
-                  <p className="text-3xl text-purple-900 font-medium">
-                    {analytics?.total_claims_today || summary?.total_claims || 0}
-                  </p>
-                  <p className="text-xs text-purple-700 mt-1">
-                    {analytics?.pending_review || 0} awaiting review
-                  </p>
-                </div>
-                <FileText className="h-10 w-10 text-purple-600" />
+        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-purple-600 mb-1">Claims Today</p>
+                <p className="text-3xl text-purple-900 font-medium">{analytics.totalClaimsToday}</p>
+                <p className="text-xs text-purple-700 mt-1">15 awaiting review</p>
               </div>
-            </CardContent>
-          </Card>
+              <FileText className="h-10 w-10 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-amber-600 mb-1">Total Amount</p>
-                  <p className="text-3xl text-amber-900 font-medium">
-                    ${analytics?.total_amount ? analytics.total_amount.toLocaleString() : '0'}
-                  </p>
-                  <p className="text-xs text-amber-700 mt-1">This month processed</p>
-                </div>
-                <DollarSign className="h-10 w-10 text-amber-600" />
+        <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-amber-600 mb-1">Total Amount</p>
+                <p className="text-3xl text-amber-900 font-medium">{analytics.totalAmount}</p>
+                <p className="text-xs text-amber-700 mt-1">This month processed</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              <DollarSign className="h-10 w-10 text-amber-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Queue List: Submitted claims with patient + provider info */}
       <Card className="rounded-2xl border-0 shadow-sm">
@@ -366,10 +244,7 @@ function PayorDashboard({ payor, onLogout }) {
                 <SelectItem value="low">Low Priority</SelectItem>
               </SelectContent>
             </Select>
-            <Button 
-              onClick={() => fetchData()}
-              className="h-12 px-8 bg-[#4ea8de] hover:bg-[#3d8bbd] rounded-xl"
-            >
+            <Button className="h-12 px-8 bg-[#4ea8de] hover:bg-[#3d8bbd] rounded-xl">
               <Search className="w-4 h-4 mr-2" />
               Search
             </Button>
@@ -377,16 +252,8 @@ function PayorDashboard({ payor, onLogout }) {
 
           {/* Claims Queue with Action Buttons per Row */}
           <div className="space-y-4">
-            {!loading && filteredClaims.length === 0 && (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No claims found</p>
-                <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
-              </div>
-            )}
-            
             {filteredClaims.map((claim) => (
-              <Card key={claim._id || claim.claim_id} className="rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
+              <Card key={claim.id} className="rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Patient + Provider Info */}
@@ -395,9 +262,10 @@ function PayorDashboard({ payor, onLogout }) {
                       <div>
                         <h4 className="text-sm text-[#6b7280] mb-3">Patient Information</h4>
                         <div className="space-y-2">
-                          <p className="text-gray-900 font-medium">{claim.patient?.name || 'N/A'}</p>
-                          <p className="text-sm text-[#6b7280]">ID: {claim.patient?.patient_id || 'N/A'}</p>
-                          <p className="text-sm text-[#6b7280]">Policy: {claim.patient?.policy_number || 'N/A'}</p>
+                          <p className="text-gray-900 font-medium">{claim.patient.name}</p>
+                          <p className="text-sm text-[#6b7280]">Age: {claim.patient.age}</p>
+                          <p className="text-sm text-[#6b7280]">ID: {claim.patient.id}</p>
+                          <p className="text-sm text-[#6b7280]">Policy: {claim.patient.policyNumber}</p>
                         </div>
                       </div>
 
@@ -405,10 +273,10 @@ function PayorDashboard({ payor, onLogout }) {
                       <div>
                         <h4 className="text-sm text-[#6b7280] mb-3">Provider Information</h4>
                         <div className="space-y-2">
-                          <p className="text-gray-900 font-medium">{claim.provider?.name || 'N/A'}</p>
-                          <p className="text-sm text-[#6b7280]">ID: {claim.provider?.provider_id || 'N/A'}</p>
-                          <p className={`text-sm ${getNetworkColor(claim.provider?.network || 'Unknown')}`}>
-                            {claim.provider?.network || 'Network Unknown'}
+                          <p className="text-gray-900 font-medium">{claim.provider.name}</p>
+                          <p className="text-sm text-[#6b7280]">ID: {claim.provider.id}</p>
+                          <p className={`text-sm ${getNetworkColor(claim.provider.network)}`}>
+                            {claim.provider.network}
                           </p>
                         </div>
                       </div>
@@ -418,18 +286,11 @@ function PayorDashboard({ payor, onLogout }) {
                     <div>
                       <h4 className="text-sm text-[#6b7280] mb-3">Claim Details</h4>
                       <div className="space-y-2">
-                        <p className="text-[#4ea8de] font-medium">{claim.claim_id}</p>
-                        <p className="text-sm text-[#6b7280]">{claim.diagnosis?.primary || 'No diagnosis'}</p>
-                        <p className="text-xl text-gray-900 font-medium">${claim.amount?.toLocaleString() || '0'}</p>
-                        <p className="text-sm text-[#6b7280]">
-                          Submitted: {claim.submitted_date ? new Date(claim.submitted_date).toLocaleDateString() : 'N/A'}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {getPriorityBadge(claim.priority)}
-                          <Badge variant={claim.status === 'approved' ? 'default' : claim.status === 'denied' ? 'destructive' : 'secondary'}>
-                            {claim.status?.charAt(0).toUpperCase() + claim.status?.slice(1) || 'Unknown'}
-                          </Badge>
-                        </div>
+                        <p className="text-[#4ea8de] font-medium">{claim.id}</p>
+                        <p className="text-sm text-[#6b7280]">{claim.claim.diagnosis}</p>
+                        <p className="text-xl text-gray-900 font-medium">{claim.claim.amount}</p>
+                        <p className="text-sm text-[#6b7280]">Submitted: {claim.claim.submittedDate}</p>
+                        {getPriorityBadge(claim.claim.priority)}
                       </div>
                     </div>
 
@@ -439,38 +300,25 @@ function PayorDashboard({ payor, onLogout }) {
                       <div className="space-y-3">
                         <Button 
                           size="sm" 
-                          onClick={() => handleClaimAction(claim.claim_id, 'approve', { approvedAmount: claim.amount })}
-                          disabled={actionLoading[claim.claim_id] || claim.status === 'approved'}
-                          className="w-full bg-[#4ade80] hover:bg-green-600 text-white rounded-xl disabled:opacity-50"
+                          className="w-full bg-[#4ade80] hover:bg-green-600 text-white rounded-xl"
                         >
-                          {actionLoading[claim.claim_id] === 'approve' ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                          )}
-                          {claim.status === 'approved' ? 'Approved' : 'Approve'}
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Approve
                         </Button>
                         <Button 
                           size="sm" 
                           variant="destructive"
-                          onClick={() => handleClaimAction(claim.claim_id, 'deny')}
-                          disabled={actionLoading[claim.claim_id] || claim.status === 'denied'}
-                          className="w-full rounded-xl disabled:opacity-50"
+                          className="w-full rounded-xl"
                         >
-                          {actionLoading[claim.claim_id] === 'deny' ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <XCircle className="h-4 w-4 mr-2" />
-                          )}
-                          {claim.status === 'denied' ? 'Denied' : 'Deny'}
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Reject
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              disabled={actionLoading[claim.claim_id]}
-                              className="w-full rounded-xl border-[#4ea8de] text-[#4ea8de] hover:bg-[#4ea8de] hover:text-white disabled:opacity-50"
+                              className="w-full rounded-xl border-[#4ea8de] text-[#4ea8de] hover:bg-[#4ea8de] hover:text-white"
                             >
                               <MessageSquare className="h-4 w-4 mr-2" />
                               Request Info
@@ -480,7 +328,7 @@ function PayorDashboard({ payor, onLogout }) {
                             <DialogHeader>
                               <DialogTitle>Request Additional Information</DialogTitle>
                               <DialogDescription>
-                                Send a request for more information about claim {claim.claim_id}
+                                Send a request for more information about this claim
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
@@ -508,16 +356,7 @@ function PayorDashboard({ payor, onLogout }) {
                             </div>
                             <div className="flex justify-end space-x-2">
                               <Button variant="outline" className="rounded-xl">Cancel</Button>
-                              <Button 
-                                onClick={() => {
-                                  handleClaimAction(claim.claim_id, 'request-info', {
-                                    notes: 'Additional information requested by payor'
-                                  });
-                                }}
-                                className="bg-[#4ea8de] hover:bg-[#3d8bbd] rounded-xl"
-                              >
-                                Send Request
-                              </Button>
+                              <Button className="bg-[#4ea8de] hover:bg-[#3d8bbd] rounded-xl">Send Request</Button>
                             </div>
                           </DialogContent>
                         </Dialog>
@@ -532,88 +371,47 @@ function PayorDashboard({ payor, onLogout }) {
       </Card>
 
       {/* Coverage Rules & Validation */}
-      {!loading && (
-        <Card className="rounded-2xl border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              Claims Summary & Validation
-            </CardTitle>
-            <CardDescription>
-              Current status overview of your claim queue
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 border border-green-200 rounded-2xl bg-green-50">
-                <div className="flex items-center space-x-3 mb-2">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <h4 className="text-green-800 font-medium">Approved Claims</h4>
-                </div>
-                <p className="text-sm text-green-700">
-                  {summary?.status_counts?.approved || 0} claims approved
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  {summary?.total_claims ? Math.round((summary.status_counts?.approved || 0) / summary.total_claims * 100) : 0}% of total claims
-                </p>
+      <Card className="rounded-2xl border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-blue-600" />
+            Coverage Rules & Validation
+          </CardTitle>
+          <CardDescription>
+            Automated validation status for current claim queue
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-4 border border-green-200 rounded-2xl bg-green-50">
+              <div className="flex items-center space-x-3 mb-2">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+                <h4 className="text-green-800 font-medium">Policy Validation</h4>
               </div>
-              
-              <div className="p-4 border border-yellow-200 rounded-2xl bg-yellow-50">
-                <div className="flex items-center space-x-3 mb-2">
-                  <AlertTriangle className="h-6 w-6 text-yellow-600" />
-                  <h4 className="text-yellow-800 font-medium">Pending Review</h4>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  {summary?.status_counts?.pending || 0} claims awaiting review
-                </p>
-                <p className="text-xs text-yellow-600 mt-1">
-                  {summary?.priority_counts?.high || 0} high priority
-                </p>
-              </div>
-              
-              <div className="p-4 border border-blue-200 rounded-2xl bg-blue-50">
-                <div className="flex items-center space-x-3 mb-2">
-                  <Shield className="h-6 w-6 text-blue-600" />
-                  <h4 className="text-blue-800 font-medium">Total Claims</h4>
-                </div>
-                <p className="text-sm text-blue-700">
-                  {summary?.total_claims || 0} total claims in system
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  {summary?.status_counts?.denied || 0} denied claims
-                </p>
-              </div>
+              <p className="text-sm text-green-700">All claims have active, valid policies</p>
+              <p className="text-xs text-green-600 mt-1">3/3 claims validated</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
-          </TabsContent>
-
-          <TabsContent value="policies">
-            <PolicyManagement />
-          </TabsContent>
-
-          <TabsContent value="preauth">
-            <PreAuthorizationCenter />
-          </TabsContent>
-
-          <TabsContent value="claims" className="space-y-6">
-            {/* Claims management content - you can move existing claims UI here */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Claims Management</CardTitle>
-                <CardDescription>Detailed claims management interface coming soon</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">
-                  This section will contain the detailed claims management interface 
-                  with filtering, search, and claim details.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+            
+            <div className="p-4 border border-yellow-200 rounded-2xl bg-yellow-50">
+              <div className="flex items-center space-x-3 mb-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <h4 className="text-yellow-800 font-medium">Pre-Authorization</h4>
+              </div>
+              <p className="text-sm text-yellow-700">1 claim requires pre-authorization review</p>
+              <p className="text-xs text-yellow-600 mt-1">CLM-2024-003 pending approval</p>
+            </div>
+            
+            <div className="p-4 border border-blue-200 rounded-2xl bg-blue-50">
+              <div className="flex items-center space-x-3 mb-2">
+                <Shield className="h-6 w-6 text-blue-600" />
+                <h4 className="text-blue-800 font-medium">Coverage Limits</h4>
+              </div>
+              <p className="text-sm text-blue-700">All claims within policy coverage limits</p>
+              <p className="text-xs text-blue-600 mt-1">No overages detected</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

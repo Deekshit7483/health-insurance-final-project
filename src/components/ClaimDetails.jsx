@@ -418,4 +418,4 @@ function ClaimDetails({ claimId, onBack }) {
   );
 }
 
-export default ClaimDetails;6
+export default ClaimDetails;
